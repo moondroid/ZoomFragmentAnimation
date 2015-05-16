@@ -195,49 +195,46 @@ public class MainActivity extends AppCompatActivity
         // to the original bounds and show the thumbnail instead of
         // the expanded image.
         final float startScaleFinal = startScale;
-        expandedImageView.setOnClickListener(new View.OnClickListener() {
+
+        if (mCurrentAnimator != null) {
+            mCurrentAnimator.cancel();
+        }
+
+        // Animate the four positioning/sizing properties in parallel,
+        // back to their original values.
+        AnimatorSet set = new AnimatorSet();
+        set.play(ObjectAnimator
+                .ofFloat(expandedImageView, View.X, startBounds.left))
+                .with(ObjectAnimator
+                        .ofFloat(expandedImageView,
+                                View.Y, startBounds.top))
+                .with(ObjectAnimator
+                        .ofFloat(expandedImageView,
+                                View.SCALE_X, startScaleFinal))
+                .with(ObjectAnimator
+                        .ofFloat(expandedImageView,
+                                View.SCALE_Y, startScaleFinal));
+        set.setDuration(mAnimationDuration);
+        set.setInterpolator(new DecelerateInterpolator());
+        set.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onClick(View view) {
-                if (mCurrentAnimator != null) {
-                    mCurrentAnimator.cancel();
-                }
+            public void onAnimationEnd(Animator animation) {
+                thumbView.setAlpha(1f);
+                expandedImageView.setVisibility(View.GONE);
+                getFragmentManager().popBackStack();
+                mCurrentAnimator = null;
+            }
 
-                // Animate the four positioning/sizing properties in parallel,
-                // back to their original values.
-                AnimatorSet set = new AnimatorSet();
-                set.play(ObjectAnimator
-                        .ofFloat(expandedImageView, View.X, startBounds.left))
-                        .with(ObjectAnimator
-                                .ofFloat(expandedImageView,
-                                        View.Y, startBounds.top))
-                        .with(ObjectAnimator
-                                .ofFloat(expandedImageView,
-                                        View.SCALE_X, startScaleFinal))
-                        .with(ObjectAnimator
-                                .ofFloat(expandedImageView,
-                                        View.SCALE_Y, startScaleFinal));
-                set.setDuration(mAnimationDuration);
-                set.setInterpolator(new DecelerateInterpolator());
-                set.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        thumbView.setAlpha(1f);
-                        expandedImageView.setVisibility(View.GONE);
-                        getFragmentManager().popBackStack();
-                        mCurrentAnimator = null;
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        thumbView.setAlpha(1f);
-                        expandedImageView.setVisibility(View.GONE);
-                        getFragmentManager().popBackStack();
-                        mCurrentAnimator = null;
-                    }
-                });
-                set.start();
-                mCurrentAnimator = set;
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                thumbView.setAlpha(1f);
+                expandedImageView.setVisibility(View.GONE);
+                getFragmentManager().popBackStack();
+                mCurrentAnimator = null;
             }
         });
+        set.start();
+        mCurrentAnimator = set;
+
     }
 }
